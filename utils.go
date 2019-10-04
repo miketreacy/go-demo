@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -64,23 +63,22 @@ func Map(vs []string, f func(string) string) []string {
 }
 
 // simple http request util
-func fetch(url string) []byte {
+func fetch(url string) (int, string) {
 	// if strings.ToUpper(methodStr) == "POST" {
 	// 	res, err := http.Post(url, "application/json", body)
 	// }
 
-	fmt.Printf("Sending request to  %v", url)
+	fmt.Printf("\nSending request to  %v", url)
 	res, err := http.Get(url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "fetch: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Response status %v", res.Status)
-	body, err := ioutil.ReadAll(res.Body)
+	fmt.Printf("\nResponse status %v", res.Status)
+	// body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "fetch: reading %s: %v\n", url, err)
 		os.Exit(1)
 	}
-	fmt.Printf("%s", body)
-	return body
+	return res.StatusCode, res.Status
 }

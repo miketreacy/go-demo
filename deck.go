@@ -24,6 +24,7 @@ func (d deck) print() {
 
 func newDeck() deck {
 	// suitChars := []string{"U+2660", "U+2665", "U+2663", "U+2666"}
+	fmt.Println("\n...Creating new deck")
 	cards := deck{}
 	suits := suits()
 	values := []string{"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"}
@@ -53,8 +54,11 @@ func suits() []string {
 	return []string{"Spades", "Hearts", "Diamonds", "Clubs"}
 }
 
-func deal(d deck, handSize int) (deck, deck) {
-	return d[:handSize], d[handSize:]
+func deal(d deck, handSize int) (deck, deck, error) {
+	if handSize > len(d) {
+		return nil, nil, fmt.Errorf("Error: deal() - deck has less than %v cards", handSize)
+	}
+	return d[:handSize], d[handSize:], nil
 }
 
 func (d deck) toString() string {

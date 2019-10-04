@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var cardDeck deck
@@ -14,6 +17,7 @@ func serve(cards deck) {
 	cardDeck = cards
 	http.HandleFunc("/", helloWeb)
 	http.HandleFunc("/deal/", dealHand)
+	http.HandleFunc("/api/", apiHandler)
 	fmt.Println("...listening at localhost:" + port)
 	http.ListenAndServe(":8080", nil)
 }
@@ -35,7 +39,12 @@ func dealHand(w http.ResponseWriter, r *http.Request) {
 	paths := strings.Split(r.URL.Path, "/")
 	handSizeStr := paths[2]
 	handSize, _ := strconv.Atoi(handSizeStr)
-	hand, cards := deal(cardDeck, handSize)
+	hand, cards, err := deal(cardDeck, handSize)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "deal: %v\n", err)
+		cardDeck = newDeck()
+		hand, cards, err = deal(cardDeck, handSize)
+	}
 	cardDeck = cards
 
 	fmt.Fprintf(w, "You have been dealt a hand of %v cards!\n", strconv.Itoa(len(hand)))
@@ -46,4 +55,27 @@ func dealHand(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%v %v\n", strconv.Itoa(len(cards)), s)
 
 	}
+}
+
+type hand struct {
+	Cards     deck      `json:"cards"`
+	TimeStamp time.Time `json:"timeStamp"`
+	Size      int       `json:"size"`
+}
+
+type hands []hand
+
+// basic JSON API
+func apiHandler(w http.ResponseWriter, r *http.Request) {
+	ts := time.Now()
+	h := hand{Cards: cardDeck, TimeStamp: ts, Size: len(cardDeck)}
+	data, err := json.MarshalIndent(h, "", "    ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "apiHandler: json.MarshallIndent %v: %v\n", h, err)
+		os.Exit(1)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+
 }

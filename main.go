@@ -27,11 +27,10 @@ func main() {
 	fmt.Println(args)
 
 	// make http request
-	page := fetch("https://motivic.io")
-	fmt.Println(page)
+	fetch("https://motivic.io")
 
 	// do card stuff
-	fmt.Println("...getting deck")
+	fmt.Println("\n...getting deck")
 	cards := newDeck()
 
 	fmt.Println("...shuffling deck")
