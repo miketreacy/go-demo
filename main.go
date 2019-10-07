@@ -40,10 +40,10 @@ func main() {
 	cards.saveToFile("my_cards.txt")
 
 	fmt.Println("...loading deck from file")
-	cardsFromFile := newDeckFromFile("my_cards.txt")
+	cards = newDeckFromFile("my_cards.txt")
 
 	// run the server
 	fmt.Println("...spinning up the server")
-	serve(cardsFromFile)
+	serve(cards)
 
 }

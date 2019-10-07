@@ -10,11 +10,12 @@ import (
 	"time"
 )
 
-var cardDeck deck
+// CardDeck : application state variable that holds a deck instance persisted in memory
+var CardDeck Deck
 var port string = "8080"
 
-func serve(cards deck) {
-	cardDeck = cards
+func serve(cards Deck) {
+	CardDeck = cards
 	http.HandleFunc("/", helloWeb)
 	http.HandleFunc("/deal/", dealHand)
 	http.HandleFunc("/api/", apiHandler)
@@ -39,43 +40,35 @@ func dealHand(w http.ResponseWriter, r *http.Request) {
 	paths := strings.Split(r.URL.Path, "/")
 	handSizeStr := paths[2]
 	handSize, _ := strconv.Atoi(handSizeStr)
-	hand, cards, err := deal(cardDeck, handSize)
+	hand, cards, err := deal(CardDeck, handSize)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "deal: %v\n", err)
-		cardDeck = newDeck()
-		hand, cards, err = deal(cardDeck, handSize)
+		CardDeck = newDeck()
+		hand, cards, err = deal(CardDeck, handSize)
 	}
-	cardDeck = cards
+	CardDeck = cards
 
 	fmt.Fprintf(w, "You have been dealt a hand of %v cards!\n", strconv.Itoa(len(hand)))
 	fmt.Fprintf(w, "\n%v\n", hand.toString())
-	fmt.Fprintf(w, "\n%v cards left in deck:\n", strconv.Itoa(len(cardDeck)))
-	for _, s := range suits() {
-		cards := filter([]string(cardDeck), suitCheck(s))
+	fmt.Fprintf(w, "\n%v cards left in deck:\n", strconv.Itoa(len(CardDeck)))
+	for _, s := range cardSuits {
+		cards := CardDeck.getSuit(s)
 		fmt.Fprintf(w, "%v %v\n", strconv.Itoa(len(cards)), s)
 
 	}
 }
 
-type hand struct {
-	Cards     deck      `json:"cards"`
-	TimeStamp time.Time `json:"timeStamp"`
-	Size      int       `json:"size"`
-}
-
-type hands []hand
-
 // basic JSON API
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	ts := time.Now()
-	h := hand{Cards: cardDeck, TimeStamp: ts, Size: len(cardDeck)}
-	data, err := json.MarshalIndent(h, "", "    ")
+	h := Hand{Cards: CardDeck, TimeStamp: ts, Size: len(CardDeck)}
+	var jsonData []byte
+	jsonData, err := json.MarshalIndent(h, "", "    ")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "apiHandler: json.MarshallIndent %v: %v\n", h, err)
 		os.Exit(1)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-
+	w.Write(jsonData)
 }
