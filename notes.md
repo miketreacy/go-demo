@@ -241,12 +241,37 @@ Interfaces solves these problems:
 - makes it easier to re-use code by declaring a typed struct signature
 - funcs that are passed interface values can also be passed values of structs with the interface signature
 - interfaces can NOT be function receiver types
+- interfaces are never instantiated
+- interfaces are NOT generic types but they present a different approach to the same problem
+   - go famously does not have generics
+- interfaces are satisfied implicitly
+   - no need to explicitly declare a link from your custom type to an interface
+- interfaces are a contract to help us to manage types and reuse code
+   - interfaces do not serve as unit tests for your types
+   - if our custom types implementation of a func is broken, interfaces won't help
 
 ```go
-// interfaces aren't explicitly inherited or extended
-// when an interface is declared, all other types in the program that match the signature are implicitly given that interface type
+// interfaces aren't explicitly inherited or extended 
+// when an interface is declared, all other types in the program that match
+// the signature are implicitly given that interface type
 type bot interface {
-   getGreeting() string
+   // interfaces declare func arguments and return types
+   getGreeting(int, string) (int, string)
+   // you can declare an interface that requires multiple funcs to satisfy membership
+   getBotVersion() float64
+   respondToUser(user) string
+}
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+type Closer interface {
+    Close() error
+}
+// interfaces can be created by embedding other interfaces,
+// thus requiring types to satisfy all child interfaces
+type ReadCloser interface {
+   Reader
+   Closer
 }
 type englishBot struct{}
 type spanishBot struct{}
@@ -267,6 +292,21 @@ func main() {
 
 	printGreeting(eb)
 	printGreeting(sb)
+}
+```
+### Reader Interface
+The native [Reader](https://golang.org/pkg/io/#Reader) interface provides a common ouput `[]byte` for many disparate forms of input
+   - http request body
+   - text file
+   - image file
+   - user CLI input
+   - 
+```go
+// the calling func passes a byte slice to Reader.Read() 
+// our byte slice is then mutated by pointer
+// we get back an int representing the length of the byte slice
+type Reader interface {
+    Read(p []byte) (n int, err error)
 }
 ```
 

@@ -27,7 +27,10 @@ func main() {
 	fmt.Println(args)
 
 	// make http request
-	fetch("https://motivic.io")
+	url := "https://motivic.io"
+	statusCode, status, content := fetch(url)
+	fmt.Println("response:", statusCode, status)
+	fmt.Println(content)
 
 	// do card stuff
 	fmt.Println("\n...getting deck")

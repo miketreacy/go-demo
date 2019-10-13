@@ -63,7 +63,7 @@ func Map(vs []string, f func(string) string) []string {
 }
 
 // simple http request util
-func fetch(url string) (int, string) {
+func fetch(url string) (int, string, string) {
 	// if strings.ToUpper(methodStr) == "POST" {
 	// 	res, err := http.Post(url, "application/json", body)
 	// }
@@ -74,11 +74,14 @@ func fetch(url string) (int, string) {
 		fmt.Fprintf(os.Stderr, "fetch: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\nResponse status %v", res.Status)
+	// make an empty byte slice of initial length 99999
+	bs := make([]byte, 99999)
+	res.Body.Read(bs)
+	bodyStr := string(bs)
 	// body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "fetch: reading %s: %v\n", url, err)
 		os.Exit(1)
 	}
-	return res.StatusCode, res.Status
+	return res.StatusCode, res.Status, bodyStr
 }
