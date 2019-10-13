@@ -35,7 +35,7 @@
 
 
 ## VARIABLES
-types are autmatically inferred from the assignment value
+types are automatically inferred from the assignment value
 ```go
 // These two declarations are equivalent - the type string is inferred by the value
 var name string = "Mike"
@@ -43,20 +43,27 @@ name := "Mike"
 // The := operator is only used for initialization.
 // To reassign an existing variable you must use =
 ```
+
 ## TYPES
+
+### VALUE TYPES
+use pointers to mutate these things in a function
 type default zero values in parens
-  - int (0)
-  - float64 (0)
-  - string ("")
-  - bool (false)
-  - array
+  - `int` (0)
+  - `float64` (0)
+  - `string` ("")
+  - `bool` (false)
+  - `struct` (nil)
+### REFERENCE TYPES
+  - `array`
    - fixed-length list of values
    - every value in array must be of same type
-  - slice
+  - `slice`
    - an array that can grow or shrink
-  - map
-  - struct (nil)
-  - func
+  - `map`
+  - `channels`
+  - `pointers`  
+  - `func`
 ## ARRAYS v SLICES
 -  Arrays:
    - primitive data structure
@@ -68,7 +75,53 @@ type default zero values in parens
    - used 99% of the time for lists of elements
    - reference type:
       - a slice is a pointer to an underlying array
+      - every time you create a slice, go creates two items in memory
+         - the slice value itself
+         - an internal array 
+         - when a slice is passed by value into a func,
+         the func makes a new copy of the slice but it still points to the underlying array value
 
+```go
+type Direction int
+
+const (
+	North Direction = iota
+	East
+	South
+	West
+)
+
+func (d Direction) String() string {
+	return [...]string{"North", "East", "South", "West"}[d]
+}
+
+func main() {
+
+	var d Direction = North
+	fmt.Print(d)
+	switch d {
+	case North:
+		fmt.Println(" goes up.")
+	case South:
+		fmt.Println(" goes down.")
+	default:
+		fmt.Println(" stays put.")
+	}
+
+	mySlice := []string{"Hi", "There", "How", "Are", "You"}
+	updateSlice(mySlice)
+	fmt.Println(mySlice)
+   name := "Bill"
+   // cast string => to pointer address `&` => back to string value `*`
+	fmt.Println(*&name)
+}
+// slices are passed by value BUT the copied values points to the same underlying array
+// so when you mutate a slice in a func it changes the slice value in the outer scope
+func updateSlice(s []string) {
+	s[0] = "Bye"
+
+}
+```
 
 ## STRUCTS
 ```go
@@ -113,6 +166,107 @@ func (p person) updateName(newFirstName string) {
 }
 func (p person) print() {
    fmt.Printf("%+p", p)
+}
+```
+## MAPS
+- a collection of key-value pairs
+- like an Object in JS or Dict in Python
+- both the keys and the values are statically typed
+   - all keys must be the same type
+   - all values must be the same type
+
+```go
+// 3 ways to declare a map
+// #1 declaration with initialization
+colors := map[string]string{
+      "red":   "#ff0000",      
+		"green": "#4bf745", // map literal requires trailing comma!
+   }
+// #2 declaration without initialization
+var colors map[string]string
+// #3 declaration without initialization
+colors := make(map[string]string)
+
+// add keys to map with bracket notation
+// maps do NOT have dot notation
+// this is because all map keys are typed
+colors["white"] = "#ffffff"
+
+colors := make(map[int]string)
+colors[10] = "#ffffff"
+
+// to delete keys and values from a map
+delete(colors, 10)
+
+// iterating over values in a map
+func main() {
+
+	colors := map[string]string{
+		"red":   "#ff0000",
+		"green": "#4bf745",
+		"white": "#ffffff",
+	}
+}
+
+func printMap(colorMap map[string]string) {
+	// range returns a tuple of key, value
+	for color, hex := range colorMap {
+		fmt.Println(color + ": " + hex)
+
+	}
+}
+```
+
+### Maps vs Structs
+ - Map:
+   - used to represent a collection of related properties
+   - all keys same type
+   - all values same type
+   - keys are indexed - can iterate over them   
+   - don't need to know all the keys at compile time
+      - can dynamically change keys after declaration
+   - Reference Type!
+
+- Struct:
+   - used to model a "thing" with a lot of different properties
+   - values can be different types
+   - keys don't support indexing - can't iterate over them
+   - need to know all the different fields at compile time
+      - can't dynamically change field names after declaration   
+   - Value Type!
+
+
+## INTERFACES
+Interfaces solves these problems:
+- makes it easier to re-use code by declaring a typed struct signature
+- funcs that are passed interface values can also be passed values of structs with the interface signature
+- interfaces can NOT be function receiver types
+
+```go
+// interfaces aren't explicitly inherited or extended
+// when an interface is declared, all other types in the program that match the signature are implicitly given that interface type
+type bot interface {
+   getGreeting() string
+}
+type englishBot struct{}
+type spanishBot struct{}
+
+func (englishBot) getGreeting() string {
+	return "Hi there!"
+}
+func (spanishBot) getGreeting() string {
+	return "Hola!"
+}
+// this becomes available to 
+func printGreeting(b bot) {
+	fmt.Println(b.getGreeting())
+}
+func main() {
+	eb := englishBot{}
+	sb := spanishBot{}
+
+	printGreeting(eb)
+	printGreeting(sb)
 }
 ```
 
@@ -177,6 +331,22 @@ func main () {
    }
 
 
+```
+
+## FUNCS
+- receiver functions are go's version approximation of class methods()
+- when the instance is not mutated in the receiver function, only the struct type is declared in the receiver
+```go
+type struct motif{
+   name string 
+}
+func (m motif) changeName(n string) {
+   m.name = n
+}
+
+func (motif) getInfo() string {
+   return "A motif is a sequence of notes"   
+}
 ```
 
 
