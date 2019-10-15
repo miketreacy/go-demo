@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
+
+type logWriter struct{}
 
 // Index returns the first index of the target string t, or -1 if no match is found.
 func Index(vs []string, t string) int {
@@ -62,26 +65,47 @@ func Map(vs []string, f func(string) string) []string {
 	return vsm
 }
 
-// simple http request util
-func fetch(url string) (int, string, string) {
+// simple http request util using manual bytestring
+func fetch(url string, byteLen int) (int, string, string, error) {
 	// if strings.ToUpper(methodStr) == "POST" {
 	// 	res, err := http.Post(url, "application/json", body)
 	// }
+	fmt.Printf("\nSending request to %v", url)
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "\nfetch: %v\n", err)
+		return 500, "Failed to fetch", "", err
+	}
+	// make an empty byte slice of initial length 99999
+	bs := make([]byte, byteLen)
+	res.Body.Read(bs)
+	bodyStr := string(bs)
+	return res.StatusCode, res.Status, bodyStr, err
+}
 
+// simple http request util using io.Copy
+func otherFetch(url string) (int64, error) {
 	fmt.Printf("\nSending request to  %v", url)
 	res, err := http.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "fetch: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\nfetch: %v\n", err)
 		os.Exit(1)
 	}
-	// make an empty byte slice of initial length 99999
-	bs := make([]byte, 99999)
-	res.Body.Read(bs)
-	bodyStr := string(bs)
-	// body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "fetch: reading %s: %v\n", url, err)
-		os.Exit(1)
-	}
-	return res.StatusCode, res.Status, bodyStr
+	// custom implementation of Writer interface
+	lw := logWriter{}
+
+	// This function takes two args:
+	//   - a value the implements the Writer interface (os.Stdout)
+	//   - a value that implements the Reader interface
+	return io.Copy(lw, res.Body)
+}
+
+// This func makes the logWriter type satisfy the Write interface
+// (could just use os.Stdout!)
+func (logWriter) Write(bs []byte) (int, error) {
+	bl := 1000
+	newbs := string(bs)[:bl]
+	fmt.Println(newbs)
+	fmt.Println("\nJust wrote this many bytes:", len(newbs))
+	return len(newbs), nil
 }

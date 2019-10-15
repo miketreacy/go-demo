@@ -19,6 +19,7 @@ func serve(cards Deck) {
 	http.HandleFunc("/", helloWeb)
 	http.HandleFunc("/deal/", dealHand)
 	http.HandleFunc("/api/", apiHandler)
+	http.HandleFunc("/scrape/", scraper)
 	fmt.Println("...listening at localhost:" + port)
 	http.ListenAndServe(":8080", nil)
 }
@@ -71,4 +72,14 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
+}
+
+func scraper(w http.ResponseWriter, r *http.Request) {
+	paths := strings.Split(r.URL.Path, "/")
+	url := paths[2]
+	_, _, html, err := fetch("https://"+url, 9999999)
+	if err != nil {
+		fmt.Fprintf(w, "Can't fetch %v", err)
+	}
+	fmt.Fprintf(w, html)
 }

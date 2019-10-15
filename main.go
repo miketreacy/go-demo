@@ -28,9 +28,14 @@ func main() {
 
 	// make http request
 	url := "https://motivic.io"
-	statusCode, status, content := fetch(url)
+	statusCode, status, content, err := fetch(url, 1000)
+	if err != nil {
+		fmt.Printf("\nCan't fetch %v\n", err)
+	}
 	fmt.Println("response:", statusCode, status)
 	fmt.Println(content)
+
+	otherFetch(url)
 
 	// do card stuff
 	fmt.Println("\n...getting deck")

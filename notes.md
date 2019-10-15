@@ -1,9 +1,12 @@
 # GOLANG NOTES
 
 ## CLI
- - go build <file>: compiles module to an executable binary file
- - go run <file>: builds AND executes program
- - go 
+ - go build <go_files>: compiles module to an executable binary file
+   - built executable will be named after first file in args
+ - go run <go_file>: builds AND executes program
+ - ./<executable_file>: runs the built executable for your go package
+ - go test: runs any tests in directory
+ - 
 
  ## PACKAGES
  Packages may contain multiple files.
@@ -295,7 +298,7 @@ func main() {
 }
 ```
 ### Reader Interface
-The native [Reader](https://golang.org/pkg/io/#Reader) interface provides a common ouput `[]byte` for many disparate forms of input
+The std lib [Reader](https://golang.org/pkg/io/#Reader) interface provides a common ouput `[]byte` for many disparate forms of input
    - http request body
    - text file
    - image file
@@ -307,6 +310,20 @@ The native [Reader](https://golang.org/pkg/io/#Reader) interface provides a comm
 // we get back an int representing the length of the byte slice
 type Reader interface {
     Read(p []byte) (n int, err error)
+}
+```
+
+### Writer Interface
+The std lib [Writer](https://golang.org/pkg/io/#Writer) interface takes a byte slice and
+ transforms it into one of many output formats.
+   - http request body
+   - text file
+   - image file
+   - user CLI input
+
+```go
+type Writer interface {
+    Write(p []byte) (n int, err error)
 }
 ```
 
@@ -388,17 +405,24 @@ func (motif) getInfo() string {
    return "A motif is a sequence of notes"   
 }
 ```
-
-
 ## fmt
   - `Println`: To print a string to a line:
   - `Printf`: To do string interpolation (must explicitly add newlines as needed)
    - `fmt.Printf("%v", anyPrimitiveType)`: `%v` interpolates any type into string
    - `fmt.Printf("%+v", struct)`: `%+v` prints string representation of struct
 
+## CONCURRENCY
+structures in go for using concurrency 
+ - channels
+ - goroutine
 
- ##
- How to Access Course Diagrams
+### CHANNELS
+
+### GOROUTINES
+
+
+
+## How to Access Course Diagrams
 All of the diagrams in this course can be downloaded and marked up by you!  Here's how:
 
 Go to https://github.com/StephenGrider/GoCasts/tree/master/diagrams
