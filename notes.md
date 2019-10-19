@@ -438,7 +438,8 @@ Hardware Environments:
 #### Go Routine Gotchas
 The main routine is the parent routine that decides when our program exits.
 The main routine cursor doesn't wait for child routines to return.
-
+Never reference a pointer variable from multiple go routines!
+   - don't close over outer variables from a go routine
 ```go
 
 for _, link := range links {
@@ -455,16 +456,23 @@ Channels are used to communicate between multiple running go routines
 - any data sent to the channel is sent to all running go routines
 - channels are typed - all the messages sent to a channel must be of the same type
 
+Receiving messages from a channel is a blocking operation for the main routine.
+- if you have more channel receivers than senders, your program will hang
+
 #### Sending Data with Channels
 ```go
 c := make(chan int)
+
 // send the value '5' into this channel
 c <- 5
+
 // wait for a value to be sent into the channel
 // when we get a value, assign it to 'myNumber'
 myNumber <- c
+
 // wait for a value to be sent into the channel
 // when we get one, log it out immediately
+
 fmt.Println(<- c)
 ```
 
