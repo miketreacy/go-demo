@@ -35,6 +35,10 @@ func main() {
 	fmt.Println("response:", statusCode, status)
 	fmt.Println(content)
 
+	serialWebChecker()
+
+	parallelWebChecker()
+
 	otherFetch(url)
 
 	// do card stuff

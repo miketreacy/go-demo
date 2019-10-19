@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type logWriter struct{}
@@ -108,4 +109,8 @@ func (logWriter) Write(bs []byte) (int, error) {
 	fmt.Println(newbs)
 	fmt.Println("\nJust wrote this many bytes:", len(newbs))
 	return len(newbs), nil
+}
+
+func timestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }

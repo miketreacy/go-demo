@@ -412,15 +412,61 @@ func (motif) getInfo() string {
    - `fmt.Printf("%+v", struct)`: `%+v` prints string representation of struct
 
 ## CONCURRENCY
-structures in go for using concurrency 
- - channels
- - goroutine
-
-### CHANNELS
+"Concurrency is not parallelism"
+   - CONCURRENCY: multiple threads executing code
+      - Go routines are executed concurrently on a single CPU core  
+   - PARALLELISM: multiple threads executing code at the exact same time (requires multiple CPU cores)
+      - Go routines are executed in parallel on multiple CPU cores   
 
 ### GOROUTINES
+- go routines:
+   - an engine that executes code in a given process.
+   - when a goroutine hits a blocking call, then the goroutine has to wait
+   - while waiting, it passes control flow back to the main goroutine
+   - go routines run concurrently
+   - Go routine completion is not deterministic
 
+#### Theory of Go Routines
+Hardware Environments:
+  1. One CPU Core:
+   - Go's default behavior is to run on one CPU Core
+   - When running on one Core, Go routines do not run at the same time
+   - the Go Scheduler runs one routine until it finishes or makes a blocking call, then executes the next go routine
+  2. Multiple CPU Cores:
+   -  Go Scheduler runs one thread on each "logical" core
 
+#### Go Routine Gotchas
+The main routine is the parent routine that decides when our program exits.
+The main routine cursor doesn't wait for child routines to return.
+
+```go
+
+for _, link := range links {
+   // adding the "go" keyword in front of a function call 
+   // creates a new child go routine process to execute the code in
+   go checkLink(link)
+}
+
+```
+
+### CHANNELS
+Channels are used to communicate between multiple running go routines
+- channels are the ONLY WAY to communicate between go routines
+- any data sent to the channel is sent to all running go routines
+- channels are typed - all the messages sent to a channel must be of the same type
+
+#### Sending Data with Channels
+```go
+c := make(chan int)
+// send the value '5' into this channel
+c <- 5
+// wait for a value to be sent into the channel
+// when we get a value, assign it to 'myNumber'
+myNumber <- c
+// wait for a value to be sent into the channel
+// when we get one, log it out immediately
+fmt.Println(<- c)
+```
 
 ## How to Access Course Diagrams
 All of the diagrams in this course can be downloaded and marked up by you!  Here's how:
