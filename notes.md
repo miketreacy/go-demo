@@ -36,6 +36,18 @@
  }
  ```
 
+## GO WORKSPACE
+- one folder, any name, any location
+   - bin:
+      - compiled binary lives here
+   - pkg
+      - archives of compiled binary dependencies 
+   - src
+      - package code
+
+## PKG MANAGEMENT
+
+### GO MODULES
 
 ## VARIABLES
 types are automatically inferred from the assignment value
@@ -83,8 +95,45 @@ type default zero values in parens
          - an internal array 
          - when a slice is passed by value into a func,
          the func makes a new copy of the slice but it still points to the underlying array value
+```go
+import (
+	"fmt"
+	"sort"
+)
+
+func main() {
+   s := []int{6, 3, 9, 2, 11, 79, 1}
+   // using sort package
+	sort.Ints(s)
+	fmt.Println(s)
+
+}
+```
+## CONST and IOTA
+iota: a universal numeric incrementer starting at 0
+- use only with `const` declarations
+- can be used for making an enum
+- you can do bit-shifting with iota
 
 ```go
+// << and >> are bit-shifting operators
+// they move bytes within binary numbers
+// using bit-shifting with iota to model byte size
+const (
+   // dispense the initial iota value of zero
+   _ = iota
+   // kb = 1024
+   kb = 1 << (iota * 10)
+   mb = 1 << (iota * 10)
+   gb = 1 << (iota * 10)
+)
+
+func main () {
+   fmt.Printf("\n%d\t\t\t%b\n", kb, kb)
+   fmt.Printf("\n%d\t\t\t%b\n", mb, mb)
+   fmt.Printf("\n%d\t\t%b\n", gb, gb)
+}
+// making an enum with const and iota
 type Direction int
 
 const (
@@ -393,7 +442,25 @@ func main () {
 ## FUNCS
 - receiver functions are go's version approximation of class methods()
 - when the instance is not mutated in the receiver function, only the struct type is declared in the receiver
+
+### defer
+the `defer` directive defers the modified functions execution until the surrounding function exits
+
 ```go
+// the defer keyword
+func main() {
+	defer foo()
+	bar()
+}
+
+func foo() {
+	fmt.Println("foo")
+}
+
+func bar() {
+	fmt.Println("bar")
+}
+
 type struct motif{
    name string 
 }
@@ -403,6 +470,28 @@ func (m motif) changeName(n string) {
 
 func (motif) getInfo() string {
    return "A motif is a sequence of notes"   
+}
+
+// variadic functions
+
+func main() {
+   total := add(4, 76, 3, 8, 45)
+   fmt.Println(total)
+   
+   xi := []int{2,3,4,5,6,7}
+   // the trailing ellipses spreads a slice into func args
+   sliceSpread := add(xi...)
+   fmt.Println(sliceSpread)
+	
+}
+// the leading ellipses allow an unlimited number of params of a given type
+func add(nums ...int) int {
+   result := 0
+   // nums is a slice of ints
+	for _, num := range nums {
+		result += num
+	}
+	return result
 }
 ```
 ## fmt
