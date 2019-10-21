@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -139,3 +140,25 @@ type Hand struct {
 }
 
 type hands []Hand
+
+// ByValue : custom collection sort for slice of cards
+type ByValue []card
+
+func (v ByValue) Len() int           { return len(v) }
+func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+func (v ByValue) Less(i, j int) bool { return v[i].Value < v[j].Value }
+
+func (d Deck) sortByValue() {
+	sort.Stable(ByValue(d))
+}
+
+// BySuit : custom collection sort for slice of cards
+type BySuit []card
+
+func (s BySuit) Len() int           { return len(s) }
+func (s BySuit) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s BySuit) Less(i, j int) bool { return s[i].Suit < s[j].Suit }
+
+func (d Deck) sortBySuit() {
+	sort.Stable(BySuit(d))
+}

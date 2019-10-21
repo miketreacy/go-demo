@@ -95,6 +95,11 @@ type default zero values in parens
          - an internal array 
          - when a slice is passed by value into a func,
          the func makes a new copy of the slice but it still points to the underlying array value
+
+### SORTS
+- to sort slices of primitive types:
+   - `sort.Ints()`
+   - `sort.Strings()`
 ```go
 import (
 	"fmt"
@@ -102,12 +107,76 @@ import (
 )
 
 func main() {
-   s := []int{6, 3, 9, 2, 11, 79, 1}
-   // using sort package
-	sort.Ints(s)
-	fmt.Println(s)
+   xi := []int{6, 3, 9, 2, 11, 79, 1}
+   fmt.Println(xi)
+   // sort package sorts a slice of values in place (no return value)
+	sort.Ints(xi)
+	fmt.Println(xi)
+
+	xs := []string{"Larry", "Moe", "Curley"}
+   fmt.Println(xs)
+   // sort package sorts a slice of values in place (no return value)
+	sort.Strings(xs)
+	fmt.Println(xs)
 
 }
+
+// CUSTOM COLLECTION SORTS
+import (
+	"fmt"
+	"sort"
+)
+
+type Note struct {
+	Name     string
+	Value    int
+	Duration int
+}
+// defines string representation of Note by satisfying native struct interface
+func (n Note) String() string {
+	return fmt.Sprintf("%d:%d:%s", n.Value, n.Duration, n.Name)
+}
+
+// CUSTOM STRUCT SORT
+// ByValue implicitly implements the built-in sort.Interface https://godoc.org/sort#Interface
+// by receiving methods Len, Swap, Less
+// explicitly implementing the sort interface for your collection is more performant because
+// the native sort.Sort() has to use reflection to get the length and order of the collection
+type ByValue []Note
+
+func (v ByValue) Len() int           { return len(v) }
+func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+func (v ByValue) Less(i, j int) bool { return v[i].Value < v[j].Value }
+
+func main() {
+	s := []int{5, 2, 6, 3, 1, 4} // unsorted
+	fmt.Println("int slice: unsorted\t\t", s)
+	sort.Ints(s)
+	fmt.Println("int slice: sorted\t\t", s)
+	sort.Sort(sort.Reverse(sort.IntSlice(s)))
+	fmt.Println("int slice: reverse sorted\t", s)
+	fmt.Println()
+
+	n1 := Note{"D#", 52, 16}
+	n2 := Note{"F#", 43, 16}
+	n3 := Note{"", 0, 24}
+	n4 := Note{"B", 60, 4}
+	n5 := Note{"D#", 52, 8}
+	n6 := Note{"A#", 46, 4}
+	n7 := Note{"D#", 52, 32}
+
+	notes := []Note{n1, n2, n3, n4, n5, n6, n7}
+	fmt.Println("notes unsorted\t\t\t", notes)
+
+	sort.Sort(ByValue(notes))
+	fmt.Println("notes sorted by value\t\t", notes)
+
+	// stable sort (keeps original order of equal values)
+	sort.SliceStable(notes, func(i, j int) bool { return notes[i].Value < notes[j].Value })
+	fmt.Println("notes stable sorted by value\t", notes)
+
+}
+
 ```
 ## CONST and IOTA
 iota: a universal numeric incrementer starting at 0
