@@ -75,9 +75,9 @@ func pollURLs() {
 	c := make(chan string)
 
 	// create a go routine for each function call
-	for _, url := range links {
-		go pingURL(url, c)
-	}
+	// for _, url := range links {
+	// 	go pingURL(url, c)
+	// }
 
 	// infinite loop
 	// will ping the url again every time a go routine sends result through channel

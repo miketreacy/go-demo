@@ -575,9 +575,16 @@ func add(nums ...int) int {
       - Go routines are executed concurrently on a single CPU core  
    - PARALLELISM: multiple threads executing code at the exact same time (requires multiple CPU cores)
       - Go routines are executed in parallel on multiple CPU cores   
+"Do not communicate by sharing memory; instead, share memory by communicating"
+   - Do not communicate by locking variables between threads
+   - Communicate by sending values from one concurrent piece of code to another
 
 ### GOROUTINES
 - go routines:
+   - lightweight "threads"
+      - in reality they are not real parallel threads
+      - they are pieces of code that get scheduled among multiple os threads that makes execution concurrent
+      - go routines can share an os thread with other go routines
    - an engine that executes code in a given process.
    - when a goroutine hits a blocking call, then the goroutine has to wait
    - while waiting, it passes control flow back to the main goroutine
@@ -607,14 +614,45 @@ for _, link := range links {
 }
 
 ```
+### SYNCHRONICITY PRIMITIVES
+#### WAITGROUPS
+```go
+var wg sync.WaitGroup
+
+func main() {
+	fmt.Println("Go Routines\t", runtime.NumGoroutine())
+	fmt.Println("CPUs\t\t", runtime.NumCPU())
+
+	// Add one item to WaitGroup
+	wg.Add(1)
+	go foo()
+	bar()
+	// this line will block until everything we added to the WaitGroup
+	// calls Done()
+	wg.Wait()
+}
+
+func foo() {
+	fmt.Println("foo")
+	// WaitGroup can stop waiting now
+	wg.Done()
+}
+
+func bar() {
+	fmt.Println("bar")
+}
+```
+
 
 ### CHANNELS
+"Share memory by communicating"
 Channels are used to communicate between multiple running go routines
 - channels are the ONLY WAY to communicate between go routines
 - any data sent to the channel is sent to all running go routines
 - channels are typed - all the messages sent to a channel must be of the same type
 
 Receiving messages from a channel is a blocking operation for the main routine.
+- channel receivers will wait until they receive a value from the channel
 - if you have more channel receivers than senders, your program will hang
 
 #### Sending Data with Channels
@@ -633,6 +671,142 @@ myNumber <- c
 
 fmt.Println(<- c)
 ```
+
+```go
+func main() {
+	xs := []string{" Hello ", " world ", " come ", " code ", " with ", " me!"}
+	c := make(chan bool)
+
+	for i, s := range xs {
+      // cast index int to time.Duration to make each successive
+      // func call wait one second longer than the last
+      // invoke all functions now on their own go routines
+      // we'll trigger them later through the channel
+		go waitAndSay(c, s, time.Duration(i))
+	}
+
+	// we send a signal to c in order to allow waitAndSay to continue
+	for i := 0; i < len(xs); i++ {
+		c <- true
+	}
+	// wait for a message from each go routine you created
+	// before we exit the main routine	
+	for i := 0; i < len(xs); i++ {
+      // we don't need to do anything with this value
+		<-c
+	}
+}
+
+func waitAndSay(c chan bool, s string, d time.Duration) {
+   // when we get the bool signal from the channel
+   // check if signal is true, then proceed
+   if b := <-c; b {
+		if d != 0 {
+			time.Sleep(d * time.Second)
+		}
+		fmt.Printf(s)
+   }
+   // send message back through channel to caller in main routine
+	c <- true
+}
+```
+#### BUFFERED CHANNELS
+   - a collection of individual stacked channels contained in one buffer
+   - senders block ONLY if the buffer is full
+   - receivers block ONLY when the buffer is empty
+   - to declare a buffered channel:
+   ```go
+   // this creates a stack of 100 buffered int channels
+   ch := make(chan int, 100)
+   ```
+#### CHANNELS: RANGE AND CLOSE
+   - `range` can be used to receive values from a channel inside a `for` loop
+   - `close` is used to indicate the channel has retired
+   - these keywords are useful for listening to a speficic amount of messages
+   ```go
+   func main() {
+      c := make(chan string)
+      go SayHelloMultipleTimes(c, 5)
+      // do this for every message on channel c
+      for s := range c {
+         fmt.Println(s)
+      }
+      // channel receiver has a second tuple arg 
+      // bool representing channel status      
+      v, ok := <-c
+      // the above line is blocking as long as the channel is open
+      // this line only runs when channel is closed
+      fmt.Println("Close channel?", !ok, " value ", v)
+
+   }
+   func SayHelloMultipleTimes(c chan string, n int) {
+      for i := 0; i <= n; i++ {
+         c <- "Hello"
+      }
+      // close the channel after sending message n times
+      close(c)
+   }
+   ```
+#### CHANNELS: SELECT STATEMENTS
+   - select statements allow our code to wait on multiple channels at the same time
+   - select blocks until one channel is ready
+   - if multiple channels are ready, select picks one at random
+   - syntax is similar to `switch` statement
+   - if `select` has a `default` case, then `select` won't block
+
+   ```go
+   select {
+      case value1 := <- cjammel1:
+      // do stuff
+      case channel 2 <- value2:
+      // do stuff
+      default:
+      fmt.Println("Too slow!")
+   }
+  
+   func main() {
+      rand.Seed(time.Now().UnixNano())
+
+      c1 := make(chan int)
+      c2 := make(chan int)
+
+      name := "Mike"
+      // query two db servers simultaneously for Mike's ID
+      go findID(name, "Server 1", c1)
+      go findID(name, "Server 2", c2)
+
+      // the select statement blocks until one of the channels returns
+      select {
+      case id := <-c1:
+         fmt.Println(name, "has an id of", id, "found in Server 1")
+
+      case id := <-c2:
+         fmt.Println(name, "has an id of", id, "found in Server 2")
+      // time.After() creates a channel that returns after given time
+      case <-time.After(1 * time.Millisecond):
+         fmt.Println("Search timed out!!")
+         //default:
+         //fmt.Println("Too slow!")
+      }
+
+   }
+
+   var idMapping = map[string]int{
+      "Mike":  7,
+      "Asher": 22,
+      "Karen": 13,
+   }
+
+   func findID(name, server string, c chan int) {
+      // simulate searching
+      time.Sleep(time.Duration(rand.Intn(50)) * time.Minute)
+
+      // return security clearance from map
+      c <- idMapping[name]
+   }
+   ```
+
+
 
 ## How to Access Course Diagrams
 All of the diagrams in this course can be downloaded and marked up by you!  Here's how:
