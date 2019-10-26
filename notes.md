@@ -610,6 +610,13 @@ for _, link := range links {
 }
 
 ```
+#### CONTEXT
+   - good for http request properties
+   - in go servers, each incoming request is handled in its own goroutine
+   - context is a convenient way to handle request-scoped values
+   - when launching multiple goroutines from a request it is possible to leak memory
+   - context is good for killing all child goroutines when the parent thread closes to free up memory right away
+   
 ### SYNCHRONICITY PRIMITIVES
 #### WAITGROUPS
 ```go
