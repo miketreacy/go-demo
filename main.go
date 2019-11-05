@@ -10,9 +10,9 @@ import (
 
 func main() {
 	asyncExperiment()
-	// cliArgDemo()
-	// makeRequests()
-	// runServer()
+	cliArgDemo()
+	makeRequests()
+	runServer()
 	pollURLs()
 }
 

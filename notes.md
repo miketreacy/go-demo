@@ -141,7 +141,6 @@ type default zero values in parens
   - `channels`
   - `pointers`  
   - `func`
-
 ### FUNCS
 - receiver functions are go's version approximation of class methods()
 - when the instance is not mutated in the receiver function, only the struct type is declared in the receiver
@@ -204,7 +203,6 @@ func add(nums ...int) int {
 	return result
 }
 ```
-
 ### ARRAYS v SLICES
 -  Arrays:
    - primitive data structure
@@ -266,7 +264,6 @@ func (p person) print() {
    fmt.Printf("%+p", p)
 }
 ```
-
 ### MAPS
 - a collection of key-value pairs
 - like an Object in JS or Dict in Python
@@ -333,7 +330,6 @@ func printMap(colorMap map[string]string) {
    - need to know all the different fields at compile time
       - can't dynamically change field names after declaration   
    - Value Type!
-
 ### INTERFACES
 Interfaces solves these problems:
 - makes it easier to re-use code by declaring a typed struct signature
@@ -421,7 +417,6 @@ type Writer interface {
     Write(p []byte) (n int, err error)
 }
 ```
-
 ### SORTS
 - to sort slices of primitive types:
    - `sort.Ints()`
@@ -503,7 +498,6 @@ func main() {
 
 }
 ```
-
 ### POINTERS
 Go is a "pass-by-value" language.
 When a function runs, it makes a new copy of the values passed in that exist within the scope of 
@@ -563,6 +557,74 @@ func main () {
     me.updateFirstName("Michael")
     me.print() // prints firstname: Michael as expected   
    }
+```
+
+
+### ERRORS
+   - `Go` does not have exceptions
+   - It is `Go` convention to return an error value as the last value in the tuple that a func returns
+      - if there is no error, the error value will be `nil`
+   - Errors in `Go` are children of a common `Error` interface
+
+
+#### THE ERROR INTERFACE
+   - the `Error` interface is very simple
+   - any type that implements `func Error() string` satisfies the error interface
+```go
+type error interface {
+   Error() string
+}
+```
+#### TO RETURN AN ERROR
+   - `errors.New()`
+   - `fmt.Errorf()`
+   - Create your own custom error type
+#### CHECKING FOR ERRORS
+   - use `if` statement to check if err is not nil
+```go
+// define custom error
+var ErrNotFound = errors.New("Data not found")
+
+func getData(num int)(int, err) {
+   if num < 5 {
+      // return custom error type
+      return nil, ErrNotFound
+   } else {
+      return num, nil
+   }
+}
+
+func main () {
+   // check for any error
+   if result, err := getData(); err != nil {
+      fmt.Println("ERROR:", err)
+   } else {
+      fmt.Println("RESULT:", result)
+   }
+   // check for instance of specific error
+   result, err := getData(3)
+   if err == ErrNotFound {
+      // handle specific error
+      fmt.Println("ERROR:", err)
+   } else {
+      fmt.Println("RESULT:", result)
+   }
+}
+```
+#### PANIC
+   - `panic()` is the closest `Go` comes to raising an `exception`
+   - `panic()` takes a message and can ONLY be called from a deferred function
+   - you can handle a `panic` in your program with `recover`
+   - if you don't handle the `panic`, the program will crash and print the call stack
+   - the primary use-case for `panic/recover` is handling errors across multiple concurrent routines
+```go
+func main() {
+   defer func() {
+      if err := recover(); err != nil {
+         fmt.Println("A panic recovered", err)
+      }
+   }()
+}
 ```
 
 ## CONCURRENCY

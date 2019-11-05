@@ -14,6 +14,8 @@ import (
 var CardDeck Deck
 var port string = "8080"
 
+// TODO: declare a routeMap config for server that can be exported to callers
+
 func serve(cards Deck) {
 	CardDeck = cards
 	http.HandleFunc("/", helloWeb)
